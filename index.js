@@ -1,18 +1,19 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const cors = require("cors");
 
 // Import models
 const Post = require("./src/models/post");
 
 // Define application
 const app = express();
-
-// Define DB Connection
-const db = mongoose.connect("mongodb://localhost:27017/first-node-api-db");
+dotenv.config();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors());
 
 app.get("/", function (req, res) {
 	// handle the request for root route
@@ -78,20 +79,29 @@ app.delete("/posts/:id", async (req, res) => {
 });
 
 app.patch("/posts/:id", async (req, res) => {
-	Post.findByIdAndUpdate(req.params.id, req.body, {new: true}, (error, post) => {
-		if (error) {
-			res.status(422).send("Unable to update post");
-		} else {
-			res.status(200).json(post);
+	Post.findByIdAndUpdate(
+		req.params.id,
+		req.body,
+		{ new: true },
+		(error, post) => {
+			if (error) {
+				res.status(422).send("Unable to update post");
+			} else {
+				res.status(200).json(post);
+			}
 		}
+	);
+});
+
+const PORT = process.env.PORT || 5000;
+
+mongoose
+	.connect(process.env.MONGO_URI)
+	.then(() =>
+		app.listen(PORT, () => {
+			console.log(`MongoDB Connected and server running on port: ${PORT}`);
+		})
+	)
+	.catch((err) => {
+		console.log(err.message);
 	});
-});
-
-// Tasks for you
-// 1. Create API to get details of a single Post
-// 2. Create API to update a Post
-// 3. Create API to delete a Post
-
-app.listen(5000, function () {
-	console.log("Server is running at port 5000....");
-});
